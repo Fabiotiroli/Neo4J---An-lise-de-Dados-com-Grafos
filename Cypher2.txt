@@ -1,0 +1,33 @@
+// Usuários
+CREATE (u1:User {id: 1, name: 'Fabio'});
+CREATE (u2:User {id: 2, name: 'Ana'});
+
+// Filmes e Séries
+CREATE (m1:Movie {id: 101, title: 'Matrix', year: 1999});
+CREATE (s1:Series {id: 201, title: 'Breaking Bad', seasons: 5});
+
+// Gêneros
+CREATE (g1:Genre {name: 'Sci-Fi'});
+CREATE (g2:Genre {name: 'Drama'});
+
+// Atores
+CREATE (a1:Actor {name: 'Keanu Reeves'});
+CREATE (a2:Actor {name: 'Bryan Cranston'});
+
+// Diretores
+CREATE (d1:Director {name: 'Lana Wachowski'});
+CREATE (d2:Director {name: 'Vince Gilligan'});
+
+// Relacionamentos
+CREATE (u1)-[:WATCHED {rating: 5}]->(m1);
+CREATE (u1)-[:WATCHED {rating: 4}]->(s1);
+CREATE (u2)-[:WATCHED {rating: 5}]->(s1);
+
+CREATE (a1)-[:ACTED_IN]->(m1);
+CREATE (a2)-[:ACTED_IN]->(s1);
+
+CREATE (d1)-[:DIRECTED]->(m1);
+CREATE (d2)-[:DIRECTED]->(s1);
+
+CREATE (m1)-[:IN_GENRE]->(g1);
+CREATE (s1)-[:IN_GENRE]->(g2);

@@ -1,0 +1,2 @@
+CREATE (User)-[:Watched]->(Series)-[:InGenre]->()<-[:InGenre]-(Movie)<-[:Watched]-(User),
+(Series)<-[:ActedIn]-()-[:ActedIn]->(Movie)<-[:Directed]-()-[:Directed]->(Series)
