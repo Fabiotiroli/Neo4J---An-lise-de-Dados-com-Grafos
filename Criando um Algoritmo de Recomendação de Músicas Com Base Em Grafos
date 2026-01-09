@@ -1,0 +1,72 @@
+// --- SCRIPT DE CARGA COMPLETO ---
+
+// 1. Criar Gêneros
+MERGE (g1:Genre {name: 'Rock'});
+MERGE (g2:Genre {name: 'Grunge'});
+MERGE (g3:Genre {name: 'Folk Rock'});
+
+// 2. Criar Artistas
+MERGE (a1:Artist {name: 'Queen'});
+MERGE (a2:Artist {name: 'Nirvana'});
+MERGE (a3:Artist {name: 'Bob Dylan'});
+
+// 3. Criar Músicas e conectá-las
+MERGE (t1:Music {track_id: 'track001'}) ON CREATE SET t1.name = 'Bohemian Rhapsody', t1.year = 1975;
+MERGE (t2:Music {track_id: 'track002'}) ON CREATE SET t2.name = 'Smells Like Teen Spirit', t2.year = 1991;
+MERGE (t3:Music {track_id: 'track003'}) ON CREATE SET t3.name = 'Like a Rolling Stone', t3.year = 1965;
+
+// Conexões das Músicas
+MATCH (t1:Music {track_id: 'track001'}), (a1:Artist {name: 'Queen'}), (g1:Genre {name: 'Rock'})
+MERGE (t1)-[:PERFORMED_BY]->(a1)
+MERGE (t1)-[:BELONGS_TO]->(g1);
+
+MATCH (t2:Music {track_id: 'track002'}), (a2:Artist {name: 'Nirvana'}), (g2:Genre {name: 'Grunge'})
+MERGE (t2)-[:PERFORMED_BY]->(a2)
+MERGE (t2)-[:BELONGS_TO]->(g2);
+
+MATCH (t3:Music {track_id: 'track003'}), (a3:Artist {name: 'Bob Dylan'}), (g3:Genre {name: 'Folk Rock'})
+MERGE (t3)-[:PERFORMED_BY]->(a3)
+MERGE (t3)-[:BELONGS_TO]->(g3);
+
+// 4. Criar Usuários e Interações
+MERGE (u1:User {userId: 'alice123', name: 'Alice'});
+MERGE (u2:User {userId: 'bob456', name: 'Bob'});
+
+// Interações de Alice
+MATCH (u1:User {name: 'Alice'}), (t1:Music {name: 'Bohemian Rhapsody'}), (a1:Artist {name: 'Queen'})
+MERGE (u1)-[r1:LISTENED_TO]->(t1) ON CREATE SET r1.count = 15
+MERGE (u1)-[:LIKED]->(t1)
+MERGE (u1)-[:FOLLOWS]->(a1);
+
+// Interações de Bob
+MATCH (u2:User {name: 'Bob'}), (t2:Music {name: 'Smells Like Teen Spirit'}), (a2:Artist {name: 'Nirvana'})
+MERGE (u2)-[r2:LISTENED_TO]->(t2) ON CREATE SET r2.count = 20
+MERGE (u2)-[:LIKED]->(t2)
+MERGE (u2)-[:FOLLOWS]->(a2);
+
+MATCH (u2:User {name: 'Bob'}), (t3:Music {name: 'Like a Rolling Stone'}), (a3:Artist {name: 'Nirvana'})
+MERGE (u2)-[r2:LISTENED_TO]->(t3) ON CREATE SET r2.count = 50
+MERGE (u2)-[:LIKED]->(t3)
+MERGE (u2)-[:FOLLOWS]->(a3);
+
+// --- FIM DO SCRIPT DE CARGA ---
+
+
+// Conecta Bob a Queen para que ele e Alice sigam o mesmo artista
+MATCH (u:User {name: 'Bob'}), (a:Artist {name: 'Queen'})
+MERGE (u)-[:FOLLOWS]->(a);
+
+
+// Recomendação para 'Alice' baseada em artistas seguidos em comum
+MATCH (targetUser:User {name: 'Alice'})-[:FOLLOWS]->(artist:Artist)
+MATCH (otherUser:User)-[:FOLLOWS]->(artist)
+WHERE targetUser <> otherUser
+MATCH (otherUser)-[:LIKED]->(recommendedMusic:Music)
+WHERE NOT (targetUser)-[:LISTENED_TO]->(recommendedMusic)
+MATCH (recommendedMusic)-[:PERFORMED_BY]->(musicArtist:Artist)
+RETURN recommendedMusic.name AS recommendation,
+       musicArtist.name AS artist,
+       count(DISTINCT otherUser) AS suggestedByHowManyUsers
+ORDER BY suggestedByHowManyUsers DESC
+LIMIT 10;
+
